@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
+import { useDispatch, useSelector } from 'react-redux';
+import { addContact } from 'redux/contactsSlice';
 import { nanoid } from 'nanoid';
 import { FormStyle, FormLabel, FormInput, FormBtn } from './ContactForm.styled';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-export default function ContactForm({ onSubmit, isContactNameExists }) {
+export default function ContactForm() {
+  const dispatch = useDispatch();
+  const contacts = useSelector(state => state.contacts);
+
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
 
@@ -28,14 +34,24 @@ export default function ContactForm({ onSubmit, isContactNameExists }) {
   const handleSubmit = e => {
     e.preventDefault();
 
-    const isExist = isContactNameExists(name);
+    const isExist = contacts.some(contact => contact.name === name);
 
     if (isExist) {
-      return alert(`${name} is already in contacts!`);
+      toast.warn(`${name} is already in contacts!`, {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: 'colored',
+      });
+
+      return reset();
     }
 
-    onSubmit({ name, number });
-
+    dispatch(addContact(name, number));
     reset();
   };
 
@@ -73,11 +89,7 @@ export default function ContactForm({ onSubmit, isContactNameExists }) {
         />
       </FormLabel>
       <FormBtn type="submit">Add contact</FormBtn>
+      <ToastContainer />
     </FormStyle>
   );
 }
-
-ContactForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
-  isContactNameExists: PropTypes.func.isRequired,
-};
